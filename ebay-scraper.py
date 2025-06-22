@@ -70,19 +70,27 @@ def profile_link(text):
 def sales(item):
     link = item.select_one('.s-item__link')
     url = link['href']
-
+    print(url)
     response = requests.get(url, headers=headers)
     html = response.text
-    print("running")
+    
     soup = BeautifulSoup(html, 'html.parser')
-
+    availability = soup.select_one('#qtyAvailability')
+    # spans = availability.select('.ux-textspans.ux-textspans--SECONDARY')
+ 
+# Checks product page contains given phrase (not case-sensitive)
+def contains(phrase):
+    if soup.find(string=lambda t: '3d' in t.lower()) is None:
+        return False
+    else:
+        return True
 
 # Searches sellers for first 10 products
 def run():
     for i in range(2):
         if len(pending_searches) == 0:
             seller_search(sellers.pop(0))
-        print("searching " + pending_searches[0])
+  
         search(profile_link(pending_searches.pop(0)))
    
     print(sellers)
