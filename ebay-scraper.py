@@ -47,16 +47,17 @@ def seller_search(seller):
     for item in soup.select('.s-item')[2:]:
         title = item.select_one('.s-item__title')
         price = item.select_one('.s-item__price')
-        link = item.select_one('.s-item__link')
-        url = link['href']
+        
+        sales(item)
 
-        if title and price and link:
+        # Creates new product
+        if title and price:
             pending_searches.append(title.text)
 
 pending_searches.append("Electric Toothbrush Drip tray stand")
 
-# Converts text to link format
-def link(text):
+# Converts text to seller profile link format
+def profile_link(text):
     text = text.replace(' ', '+')
     text = text.replace('/', '%2F')
     text = text.replace(',', '%2C')
@@ -65,13 +66,26 @@ def link(text):
     return text
 
 
+# Detects key phrase in a product listing and returns num of sales
+def sales(item):
+    link = item.select_one('.s-item__link')
+    url = link['href']
+
+    response = requests.get(url, headers=headers)
+    html = response.text
+    print("running")
+    soup = BeautifulSoup(html, 'html.parser')
+
 
 # Searches sellers for first 10 products
-for i in range(5):
-    if len(pending_searches) == 0:
-        seller_search(sellers.pop(0))
-    print("searching " + pending_searches[0])
-    search(link(pending_searches.pop(0)))
+def run():
+    for i in range(2):
+        if len(pending_searches) == 0:
+            seller_search(sellers.pop(0))
+        print("searching " + pending_searches[0])
+        search(profile_link(pending_searches.pop(0)))
    
-print(sellers)
+    print(sellers)
+
+run()
     
