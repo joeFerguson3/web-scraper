@@ -46,7 +46,7 @@ def search(search):
             seller = seller.text.split(' ')[0]
             # print(f"{title.text.strip()} - {price.text.strip()} - {seller}")
            
-            if seller not in sellers:
+            if seller not in sellers and seller not in complete_sellers:
                 sellers.append(seller)
     print(str(complete_searches[search]) + " sellers found")
 
@@ -56,27 +56,36 @@ def search(search):
 # Gets products for a paricular seller
 def seller_search(seller):
     print("Finding new listings from " + seller)
-    url = "https://www.ebay.co.uk/sch/ai.html?_dkr=1&iconV2Request=true&_blrs=recall_filtering&_ssn=" + seller
+
+    #Link to seller page
+    url = "https://www.ebay.co.uk/sch/i.html?_dkr=1&iconV2Request=true&_blrs=recall_filtering&_ssn=" + seller
+    
     response = requests.get(url, headers=headers)
     html = response.text
 
     soup = BeautifulSoup(html, 'html.parser')
 
+ 
     for item in soup.select('.s-item')[2:]:
         title = item.select_one('.s-item__title')
         price = item.select_one('.s-item__price')
         product_link = item.select_one('.s-item__link')
         product_url = product_link['href']
-        
-        # Creates new product
-        if title and price and contains(product_url, "3d printed"):
+
+        # Creates new product, if contains key word and above given sale count
+        sold = sales(product_url)
+        if title and price and sold >= 250:
             pending_searches.append(title.text)
+
+        with open("data.txt", "a") as f:
+            f.write(" | " + str(len(pending_searches)) + " | " + str(sold) + " | " + product_url + "\n")
+    
     print(str(len(pending_searches)) + " listings found")
 
 
 
-# Converts text to seller profile link format
-def profile_link(text):
+# Gets the link for a particular search
+def search_link(text):
     text = text.replace(' ', '+')
     text = text.replace('/', '%2F')
     text = text.replace(',', '%2C')
@@ -88,20 +97,28 @@ def profile_link(text):
 def sales(url):
     try:
         response = session.get(url)
-        response.html.render(timeout=10)
+        try:
+            response.html.render(timeout=20)
+        except Exception as e:
+            print("Render error:", e)
+            return 0
 
         html = response.text
 
         soup = BeautifulSoup(html, 'html.parser')
         availability = soup.select_one('#qtyAvailability')
+        if not availability:
+            return 0
 
         spans = availability.select('.ux-textspans.ux-textspans--SECONDARY')
+        if len(spans) < 2:
+            return 0
+
         number = (spans[1].text).split(" ")[0]
         number = int(number.replace(",", ""))
 
-        print(number)
         return number
-    except IndexError:
+    except (IndexError, ValueError, AttributeError):
         return 0
  
 # Checks product description contains given phrase (not case-sensitive)
@@ -134,16 +151,24 @@ def get_product_id(url):
 pending_searches.append("oral b toothbrush stand")
 # Searches sellers for first 10 products
 def run():
-    for i in range(100):
+    for i in range(20):
         while len(pending_searches) == 0:
             complete_sellers.append(sellers[0])
+            with open("data.txt", "a") as f:
+                f.write("\n" + sellers[0] + "\n")
+
+            # Finds sellers products
             seller_search(sellers.pop(0))
-  
-        search(profile_link(pending_searches.pop(0)))
-   
+
+        # Searches for new sellers
+        search(search_link(pending_searches.pop(0)))
+        
+        print(complete_searches)
+
     print(complete_sellers)
     print(sellers)
     print(complete_searches)
+
 
 run()
     
