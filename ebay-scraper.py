@@ -1,7 +1,7 @@
 
 import requests
 from bs4 import BeautifulSoup
-
+from requests_html import HTMLSession
 
 url = "https://www.ebay.co.uk/sch/i.html?_nkw=keyboard"
 
@@ -20,17 +20,22 @@ def search(title):
 
     soup = BeautifulSoup(html, 'html.parser')
     
-    for item in soup.select('.s-item'):
+    for item in soup.select('.s-item')[2:]:
         title = item.select_one('.s-item__title')
         price = item.select_one('.s-item__price')
         seller = item.select_one('.s-item__seller-info-text')
+        product_link = item.select_one('.s-item__link')
+        product_url = product_link['href']
 
+        # print(product_url)
+
+        print(contains(product_url, "3d"))
         # Checks listing exists
-        if title and price and seller:
+        if title and price and seller and contains(product_url, "3d"):
             seller = seller.text.split(' ')[0]
             # print(f"{title.text.strip()} - {price.text.strip()} - {seller}")
            
-            if  seller not in sellers:
+            if seller not in sellers:
                 sellers.append(seller)
     # print(pending_searches)
 
@@ -48,13 +53,13 @@ def seller_search(seller):
         title = item.select_one('.s-item__title')
         price = item.select_one('.s-item__price')
         
-        sales(item)
+        # sales(item)
 
         # Creates new product
         if title and price:
             pending_searches.append(title.text)
 
-pending_searches.append("Electric Toothbrush Drip tray stand")
+
 
 # Converts text to seller profile link format
 def profile_link(text):
@@ -79,12 +84,23 @@ def sales(item):
     # spans = availability.select('.ux-textspans.ux-textspans--SECONDARY')
  
 # Checks product page contains given phrase (not case-sensitive)
-def contains(phrase):
-    if soup.find(string=lambda t: '3d' in t.lower()) is None:
+def contains(url, phrase):
+    session = HTMLSession()
+    response = session.get(url)
+    response.html.render(timeout=2)
+
+    html = response.text
+
+    soup = BeautifulSoup(html, 'html.parser')
+    container = soup.select_one('.main-container')
+
+    if container.find(string=lambda t: phrase in t.lower()) is None:
         return False
     else:
         return True
 
+
+pending_searches.append("oral b toothbrush stand")
 # Searches sellers for first 10 products
 def run():
     for i in range(2):
