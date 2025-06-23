@@ -22,3 +22,23 @@ for item in soup.select('.s-item'):
     if title and price:
         print(f"{title.text.strip()} - {price.text.strip()}")
         print(url)
+
+
+
+# # Checks product page contains given phrase (not case-sensitive)
+# def contains(url, phrase):
+#     response = session.get(url)
+#     response.html.render(timeout=10)
+
+#     html = response.text
+
+#     soup = BeautifulSoup(html, 'html.parser')
+#     container = soup.select_one('div.vim.x-evo-tabs-region')
+
+#     print(container)
+#     if container.find(string=lambda t: phrase.lower() in t.lower()) is None:
+#         print("false")
+#         return False
+#     else:
+#         print("true")
+#         return True

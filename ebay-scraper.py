@@ -2,6 +2,7 @@
 import requests
 from bs4 import BeautifulSoup
 from requests_html import HTMLSession
+import re
 
 url = "https://www.ebay.co.uk/sch/i.html?_nkw=keyboard"
 
@@ -10,7 +11,7 @@ headers = {
 }
 sellers = []
 pending_searches = []
-
+session = HTMLSession()
 
 # Gets sellers for a specific search
 def search(title):
@@ -27,9 +28,6 @@ def search(title):
         product_link = item.select_one('.s-item__link')
         product_url = product_link['href']
 
-        # print(product_url)
-
-        print(contains(product_url, "3d"))
         # Checks listing exists
         if title and price and seller and contains(product_url, "3d"):
             seller = seller.text.split(' ')[0]
@@ -53,8 +51,6 @@ def seller_search(seller):
         title = item.select_one('.s-item__title')
         price = item.select_one('.s-item__price')
         
-        # sales(item)
-
         # Creates new product
         if title and price:
             pending_searches.append(title.text)
@@ -67,7 +63,6 @@ def profile_link(text):
     text = text.replace('/', '%2F')
     text = text.replace(',', '%2C')
     text = 'https://www.ebay.co.uk/sch/i.html?_nkw=' + text
-    print(text)
     return text
 
 
@@ -83,21 +78,34 @@ def sales(item):
     availability = soup.select_one('#qtyAvailability')
     # spans = availability.select('.ux-textspans.ux-textspans--SECONDARY')
  
-# Checks product page contains given phrase (not case-sensitive)
+# Checks product description contains given phrase (not case-sensitive)
 def contains(url, phrase):
-    session = HTMLSession()
-    response = session.get(url)
-    response.html.render(timeout=2)
+    id = get_product_id(url)
 
+    # Link to product description
+    desc = "https://itm.ebaydesc.com/itmdesc/" + id
+    print(desc)
+
+    response = requests.get(desc, headers=headers)
     html = response.text
-
     soup = BeautifulSoup(html, 'html.parser')
-    container = soup.select_one('.main-container')
 
-    if container.find(string=lambda t: phrase in t.lower()) is None:
-        return False
-    else:
+    # Gets visible text
+    text = soup.get_text(separator=' ', strip=True)
+
+    # Checks for phrase in text
+    if phrase.lower() in text.lower():
+        print("true")
         return True
+    else:
+        print("false")
+        return False
+    
+# Returns product id, extracted from given URL
+def get_product_id(url):
+   match = re.search(r"/itm/(\d+)", url)
+   product_id = match.group(1) 
+   return product_id
 
 
 pending_searches.append("oral b toothbrush stand")
