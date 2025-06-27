@@ -188,7 +188,16 @@ threading.Thread(target=run, daemon=True).start()
 threading.Thread(target=run, daemon=True).start()
 threading.Thread(target=run, daemon=True).start()
 threading.Thread(target=run, daemon=True).start()
-
+threading.Thread(target=run, daemon=True).start()
+threading.Thread(target=run, daemon=True).start()
+threading.Thread(target=run, daemon=True).start()
+threading.Thread(target=run, daemon=True).start()
+threading.Thread(target=run, daemon=True).start()
+threading.Thread(target=run, daemon=True).start()
+threading.Thread(target=run, daemon=True).start()
+threading.Thread(target=run, daemon=True).start()
+threading.Thread(target=run, daemon=True).start()
+threading.Thread(target=run, daemon=True).start()
 
 while True:
     if keyboard.is_pressed('q'):
