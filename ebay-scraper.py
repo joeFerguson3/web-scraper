@@ -33,18 +33,22 @@ def search(search):
     for item in soup.select('.s-item')[2:]:
         title = item.select_one('.s-item__title')
         price = item.select_one('.s-item__price')
-        seller = item.select_one('.s-item__seller-info-text')
+        seller_info = item.select_one('.s-item__seller-info-text')
         product_link = item.select_one('.s-item__link')
         product_url = product_link['href']
 
+        if seller_info is not None:
+            rating = seller_info.text.split(' ')[1]
+            rating = rating.replace("(", "").replace(")", "").replace(",", "")
+            rating = int(rating)
+        else:
+            rating = 0
+
         # Checks listing exists
-        if title and price and seller and contains(product_url, "3d printed"):
-           
-            # complete_searches[search] += sales(product_url)
+        if title and price and seller_info and rating > 1000 and contains(product_url, "3d printed"):
 
             complete_searches[search] += 1
-            seller = seller.text.split(' ')[0]
-            # print(f"{title.text.strip()} - {price.text.strip()} - {seller}")
+            seller = seller_info.text.split(' ')[0]
            
             if seller not in sellers and seller not in complete_sellers:
                 sellers.append(seller)
@@ -97,6 +101,7 @@ def search_link(text):
 def sales(url):
     try:
         response = session.get(url)
+        print(response.html.html[:3000])
         try:
             response.html.render(timeout=20)
         except Exception as e:
@@ -106,12 +111,20 @@ def sales(url):
         html = response.text
 
         soup = BeautifulSoup(html, 'html.parser')
+
+        text = soup.get_text().lower()
+        if "sold" in text:
+            print("Sold info found")
+
         availability = soup.select_one('#qtyAvailability')
         if not availability:
+            print("no availability")
             return 0
 
         spans = availability.select('.ux-textspans.ux-textspans--SECONDARY')
+        print(spans)
         if len(spans) < 2:
+            print("len < 2")
             return 0
 
         number = (spans[1].text).split(" ")[0]
@@ -119,6 +132,7 @@ def sales(url):
 
         return number
     except (IndexError, ValueError, AttributeError):
+        print("other error")
         return 0
  
 # Checks product description contains given phrase (not case-sensitive)
@@ -148,14 +162,18 @@ def get_product_id(url):
    return product_id
 
 
-pending_searches.append("oral b toothbrush stand")
+pending_searches.append("BT Smart Hub 2 Wall mount bracket smarthub homehub Slim Custom - Internet Router")
 # Searches sellers for first 10 products
 def run():
-    for i in range(20):
+    for i in range(30):
         while len(pending_searches) == 0:
             complete_sellers.append(sellers[0])
             with open("data.txt", "a") as f:
                 f.write("\n" + sellers[0] + "\n")
+            
+            with open("sellers.txt", "a") as f:
+                f.write(sellers[0] + "\n")
+
 
             # Finds sellers products
             seller_search(sellers.pop(0))
