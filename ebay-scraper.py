@@ -1,8 +1,12 @@
-
 import requests
+import warnings
+warnings.filterwarnings('ignore')
 from bs4 import BeautifulSoup
 from requests_html import HTMLSession
 import re
+import keyboard
+import threading
+import time
 
 url = "https://www.ebay.co.uk/sch/i.html?_nkw=keyboard"
 
@@ -52,7 +56,7 @@ def search(search):
             rating = 0
 
         # Checks listing exists
-        if title and price and seller_info and rating > 1000 and contains(product_url, "3d printed"):
+        if title and price and seller_info and rating > 2000 and contains(product_url, "3d printed"):
 
             complete_searches[search] += 1
             seller = seller_info.text.split(' ')[0]
@@ -84,12 +88,18 @@ def seller_search(seller):
         product_url = product_link['href']
 
         # Creates new product, if contains key word and above given sale count
-        sold = sales(product_url)
-        if title and price and sold >= 250:
-            pending_searches.append(title.text)
+        # sold = sales(product_url)
 
-        with open("data.txt", "a") as f:
-            f.write(" | " + str(len(pending_searches)) + " | " + str(sold) + " | " + product_url + "\n")
+        sold = item.select_one('.s-item__dynamic.s-item__quantitySold')
+        if sold:
+         sold = int(sold.text.split()[0].replace("+", "").replace(",", ""))
+        else:
+            sold = 0 
+
+        if title and price and sold >= 0 and contains(product_url, "3d printed"):
+            pending_searches.append(title.text)
+            with open("data.txt", "a") as f:
+                f.write(str(sold) + "  " + product_url + "\n")
     
     print(str(len(pending_searches)) + " listings found")
 
@@ -104,44 +114,7 @@ def search_link(text):
     return text
 
 
-# Returns num of sales for a listing
-def sales(url):
-    
-    try:
-        response = session.get(url, proxies=proxy, verify=False)
 
-        try:
-            response.html.render(timeout=20)
-        except Exception as e:
-            print("Render error:", e)
-            return "nil"
-
-        html = response.text
-
-        soup = BeautifulSoup(html, 'html.parser')
-
-        text = soup.get_text().lower()
-        if "sold" in text:
-            print("Sold info found")
-
-        availability = soup.select_one('#qtyAvailability')
-        if not availability:
-            print("no availability")
-            return "nil"
-
-        spans = availability.select('.ux-textspans')
-        print(spans)
-        if len(spans) < 2:
-            print("len < 2")
-            return "nil"
-
-        number = (spans[1].text).split(" ")[0]
-        number = int(number.replace(",", ""))
-
-        return number
-    except (IndexError, ValueError, AttributeError):
-        print("other error")
-        return "nil"
  
 # Checks product description contains given phrase (not case-sensitive)
 def contains(url, phrase):
@@ -171,30 +144,51 @@ def get_product_id(url):
 
 
 pending_searches.append("BT Smart Hub 2 Wall mount bracket smarthub homehub Slim Custom - Internet Router")
+pending_searches.append("oral b toothbrush stand")
+pending_searches.append("VWindow Security Safety Lock for Polyplastic Latches in Caravans Motorhomes")
 # Searches sellers for first 10 products
 def run():
+    with open("data.txt", "w") as f:
+        f.write("")
+    with open("sellers.txt", "w") as f:
+        f.write("")
     for i in range(30):
-        while len(pending_searches) == 0:
-            complete_sellers.append(sellers[0])
-            with open("data.txt", "a") as f:
-                f.write("\n" + sellers[0] + "\n")
+        while len(sellers) == 0:
             
-            with open("sellers.txt", "a") as f:
-                f.write(sellers[0] + "\n")
+            while(len(pending_searches) == 0):
+                time.sleep(5)
+            # Searches for new sellers
+            search(search_link(pending_searches.pop(0)))
 
 
-            # Finds sellers products
-            seller_search(sellers.pop(0))
-
-        # Searches for new sellers
-        search(search_link(pending_searches.pop(0)))
+        complete_sellers.append(sellers[0])
         
-        print(complete_searches)
+        with open("sellers.txt", "a") as f:
+            f.write(sellers[0] + "\n")
+
+        # Finds sellers products
+        seller_search(sellers.pop(0))
 
     print(complete_sellers)
     print(sellers)
     print(complete_searches)
 
 
-run()
-    
+
+
+threading.Thread(target=run, daemon=True).start()
+threading.Thread(target=run, daemon=True).start()
+threading.Thread(target=run, daemon=True).start()
+threading.Thread(target=run, daemon=True).start()
+threading.Thread(target=run, daemon=True).start()
+threading.Thread(target=run, daemon=True).start()
+threading.Thread(target=run, daemon=True).start()
+threading.Thread(target=run, daemon=True).start()
+threading.Thread(target=run, daemon=True).start()
+threading.Thread(target=run, daemon=True).start()
+
+
+while True:
+    if keyboard.is_pressed('q'):
+        print("You pressed 'q'. Exiting...")
+        break

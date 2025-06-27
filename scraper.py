@@ -42,3 +42,42 @@ for item in soup.select('.s-item'):
 #     else:
 #         print("true")
 #         return True
+
+# Returns num of sales for a listing
+def sales(url):
+    
+    try:
+        response = session.get(url, proxies=proxy, verify=False)
+
+        try:
+            response.html.render(timeout=20)
+        except Exception as e:
+            print("Render error:", e)
+            return -1
+
+        html = response.text
+        print(html[:3000])
+        soup = BeautifulSoup(html, 'html.parser')
+
+        text = soup.get_text().lower()
+        if "sold" in text:
+            print("Sold info found")
+
+        availability = soup.select_one('#qtyAvailability')
+        if not availability:
+            print("no availability")
+            return -1
+
+        spans = availability.select('.ux-textspans')
+      
+        if len(spans) < 2:
+            print("len < 2")
+            return -1
+
+        number = (spans[1].text).split(" ")[0]
+        number = int(number.replace(",", ""))
+
+        return number
+    except (IndexError, ValueError, AttributeError):
+        print("other error")
+        return -1
