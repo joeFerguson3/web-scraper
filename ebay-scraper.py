@@ -11,6 +11,12 @@ headers = {
 }
 sellers = []
 
+proxy = {
+  "http": "http://brd-customer-hl_c32170ea-zone-residential_proxy1:3jl9fzirr9k1@brd.superproxy.io:33335",
+  "https": "http://brd-customer-hl_c32170ea-zone-residential_proxy1:3jl9fzirr9k1@brd.superproxy.io:33335"
+}
+session = HTMLSession()
+session.proxies.update(proxy)
 # sellers which have been searched
 complete_sellers = []
 
@@ -18,7 +24,7 @@ pending_searches = []
 
 # Products which have been searched
 complete_searches = {}
-session = HTMLSession()
+
 
 # Gets sellers for a specific search
 def search(search):
@@ -26,6 +32,7 @@ def search(search):
     complete_searches[search] = 0
     url = search
     response = requests.get(url, headers=headers)
+
     html = response.text
 
     soup = BeautifulSoup(html, 'html.parser')
@@ -99,9 +106,10 @@ def search_link(text):
 
 # Returns num of sales for a listing
 def sales(url):
+    
     try:
-        response = session.get(url)
-        print(response.html.html[:3000])
+        response = session.get(url, proxies=proxy, verify=False)
+
         try:
             response.html.render(timeout=20)
         except Exception as e:

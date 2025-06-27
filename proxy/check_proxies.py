@@ -6,7 +6,7 @@ import requests
 q = queue.Queue()
 valid_proxies = []
 
-with open("proxy_list.txt", "r") as f:
+with open("proxy/proxy_list.txt", "r") as f:
     proxies = f.read().splitlines()
     for p in proxies:
         q.put(p)
@@ -17,9 +17,8 @@ def check_proxies():
     while not q.empty():
         proxy = q.get()
         try:
-            res = requests.get("http://ipinfo.io/json",
-                                proxies={"http": proxy,
-                                           "https:": proxy})
+            res = requests.get("https://ipinfo.io/json",
+                                proxies={"https": proxy})
 
         except:
             continue
@@ -28,5 +27,5 @@ def check_proxies():
 
 
 
-for _ in range(20):
+for _ in range(10):
     threading.Thread(target=check_proxies).start()
