@@ -166,6 +166,8 @@ def run():
         with open("sellers.txt", "a") as f:
             f.write(sellers[0] + "\n")
 
+        while(len(sellers) == 0):
+            time.sleep(5)
         # Finds sellers products
         seller_search(sellers.pop(0))
 
