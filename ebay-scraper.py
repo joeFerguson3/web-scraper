@@ -114,7 +114,7 @@ def sales(url):
             response.html.render(timeout=20)
         except Exception as e:
             print("Render error:", e)
-            return 0
+            return "nil"
 
         html = response.text
 
@@ -127,13 +127,13 @@ def sales(url):
         availability = soup.select_one('#qtyAvailability')
         if not availability:
             print("no availability")
-            return 0
+            return "nil"
 
-        spans = availability.select('.ux-textspans.ux-textspans--SECONDARY')
+        spans = availability.select('.ux-textspans')
         print(spans)
         if len(spans) < 2:
             print("len < 2")
-            return 0
+            return "nil"
 
         number = (spans[1].text).split(" ")[0]
         number = int(number.replace(",", ""))
@@ -141,7 +141,7 @@ def sales(url):
         return number
     except (IndexError, ValueError, AttributeError):
         print("other error")
-        return 0
+        return "nil"
  
 # Checks product description contains given phrase (not case-sensitive)
 def contains(url, phrase):
