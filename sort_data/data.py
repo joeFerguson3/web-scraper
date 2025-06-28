@@ -6,7 +6,14 @@ with open("data.txt", "r") as f:
        s = l.split()
        print(s)
        if(len(s) > 1):
-        data[s[1]] = s[0]
+        data[s[1]] = int(s[0])
 
 sorted_data = dict(sorted(data.items(), key=lambda item: item[1]))
+
+
+for key, value in sorted_data.items():
+    with open("sort_data/sorted_data.txt", "a") as f:
+        f.write(key + " " + str(value) + "\n")
+
+
 print(sorted_data)

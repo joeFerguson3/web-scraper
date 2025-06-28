@@ -8,6 +8,9 @@ import keyboard
 import threading
 import time
 
+# Phrases not found in the product description
+not_phrases = ["laser", "prop", "replica", "model"]
+
 url = "https://www.ebay.co.uk/sch/i.html?_nkw=keyboard"
 
 headers = {
@@ -58,11 +61,12 @@ def search(search):
         # Checks listing exists
         if title and price and seller_info and rating > 2000 and contains(product_url, "3d printed"):
 
-            complete_searches[search] += 1
+            
             seller = seller_info.text.split(' ')[0]
            
             if seller not in sellers and seller not in complete_sellers:
                 sellers.append(seller)
+                complete_searches[search] += 1
     print(str(complete_searches[search]) + " sellers found")
 
 
@@ -128,10 +132,14 @@ def contains(url, phrase):
     soup = BeautifulSoup(html, 'html.parser')
 
     # Gets visible text
-    text = soup.get_text(separator=' ', strip=True)
+    text = soup.get_text(separator=' ', strip=True).lower()
+
+    for item in not_phrases:
+        if item.lower() in text:
+            return False
 
     # Checks for phrase in text
-    if phrase.lower() in text.lower():
+    if phrase.lower() in text:
         return True
     else:
         return False
@@ -146,6 +154,7 @@ def get_product_id(url):
 pending_searches.append("BT Smart Hub 2 Wall mount bracket smarthub homehub Slim Custom - Internet Router")
 pending_searches.append("oral b toothbrush stand")
 pending_searches.append("VWindow Security Safety Lock for Polyplastic Latches in Caravans Motorhomes")
+pending_searches.append("oil filler cap removal key tool keychain 71117691446 compatible with BMW motorbike")
 # Searches sellers for first 10 products
 def run():
     with open("data.txt", "w") as f:
@@ -202,4 +211,5 @@ threading.Thread(target=run, daemon=True).start()
 while True:
     if keyboard.is_pressed('q'):
         print("You pressed 'q'. Exiting...")
+        print(sellers)
         break
